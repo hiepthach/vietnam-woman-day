@@ -73,7 +73,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       question: 'Ngày hai đứa mình chính thức bắt đầu câu chuyện tình yêu ngọt ngào là ngày nào ta?',
       options: [
         'Hôm qua mới yêu',
-        'Ngày sinh Bác Hồ',
+        'Ngày sinh Bác Hồ ',
         'Không nhớ nữa (chuẩn bị ăn đòn nha)',
         'Ngày mai mới tính'
       ],
