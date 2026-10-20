@@ -17,9 +17,20 @@ function loadInitialConfig(): AppConfig {
       return {
         ...DEFAULT_CONFIG,
         ...parsed,
+        quizQuestions: Array.isArray(parsed.quizQuestions)
+          ? parsed.quizQuestions
+          : DEFAULT_CONFIG.quizQuestions,
+        photos: Array.isArray(parsed.photos)
+          ? parsed.photos
+          : DEFAULT_CONFIG.photos,
+        coupons: Array.isArray(parsed.coupons)
+          ? parsed.coupons
+          : DEFAULT_CONFIG.coupons,
         giftLetter: {
           ...DEFAULT_CONFIG.giftLetter,
-          ...(parsed.giftLetter || {}),
+          ...(parsed.giftLetter && typeof parsed.giftLetter === 'object'
+            ? parsed.giftLetter
+            : {}),
         },
       };
     }
@@ -34,30 +45,28 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<AppConfig>(loadInitialConfig);
 
   const updateConfig = (newConfig: Partial<AppConfig>) => {
-    setConfig((prev) => {
-      const updated: AppConfig = {
-        ...prev,
-        ...newConfig,
-        giftLetter: newConfig.giftLetter
-          ? { ...prev.giftLetter, ...newConfig.giftLetter }
-          : prev.giftLetter,
-      };
-      try {
-        localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(updated));
-      } catch (error) {
-        console.error('Failed to save config to localStorage:', error);
-      }
-      return updated;
-    });
+    const updated: AppConfig = {
+      ...config,
+      ...newConfig,
+      giftLetter: newConfig.giftLetter
+        ? { ...config.giftLetter, ...newConfig.giftLetter }
+        : config.giftLetter,
+    };
+    try {
+      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to save config to localStorage:', error);
+    }
+    setConfig(updated);
   };
 
   const resetConfig = () => {
-    setConfig(DEFAULT_CONFIG);
     try {
       localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG));
     } catch (error) {
       console.error('Failed to reset config in localStorage:', error);
     }
+    setConfig(DEFAULT_CONFIG);
   };
 
   const exportConfig = (): string => {
@@ -73,13 +82,28 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       const merged: AppConfig = {
         ...DEFAULT_CONFIG,
         ...parsed,
+        quizQuestions: Array.isArray(parsed.quizQuestions)
+          ? parsed.quizQuestions
+          : DEFAULT_CONFIG.quizQuestions,
+        photos: Array.isArray(parsed.photos)
+          ? parsed.photos
+          : DEFAULT_CONFIG.photos,
+        coupons: Array.isArray(parsed.coupons)
+          ? parsed.coupons
+          : DEFAULT_CONFIG.coupons,
         giftLetter: {
           ...DEFAULT_CONFIG.giftLetter,
-          ...(parsed.giftLetter || {}),
+          ...(parsed.giftLetter && typeof parsed.giftLetter === 'object'
+            ? parsed.giftLetter
+            : {}),
         },
       };
-      setConfig(merged);
+
+      // Transactional storage sync: persist first
       localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(merged));
+
+      // Update state only after storage write succeeds
+      setConfig(merged);
       return true;
     } catch (error) {
       console.error('Failed to import config:', error);

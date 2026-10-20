@@ -222,6 +222,69 @@ describe('ConfigContext & useConfig', () => {
     consoleSpy.mockRestore();
   });
 
+  it('aborts state update and returns false if localStorage.setItem fails during importConfig', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const setItemSpy = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new Error('QuotaExceededError');
+      });
+
+    let capturedContext: ReturnType<typeof useConfig> | null = null;
+    render(
+      <ConfigProvider>
+        <TestConsumer onRender={(ctx) => (capturedContext = ctx)} />
+      </ConfigProvider>
+    );
+
+    let success = true;
+    act(() => {
+      success = capturedContext!.importConfig(
+        JSON.stringify({
+          ...DEFAULT_CONFIG,
+          recipientName: 'Tên Không Thể Lưu',
+        })
+      );
+    });
+
+    expect(success).toBe(false);
+    expect(screen.getByTestId('recipient-name').textContent).toBe(
+      DEFAULT_CONFIG.recipientName
+    );
+
+    setItemSpy.mockRestore();
+    consoleSpy.mockRestore();
+  });
+
+  it('falls back to default arrays if imported config has non-array quizQuestions, photos, or coupons', () => {
+    let capturedContext: ReturnType<typeof useConfig> | null = null;
+    render(
+      <ConfigProvider>
+        <TestConsumer onRender={(ctx) => (capturedContext = ctx)} />
+      </ConfigProvider>
+    );
+
+    let success = false;
+    act(() => {
+      success = capturedContext!.importConfig(
+        JSON.stringify({
+          ...DEFAULT_CONFIG,
+          recipientName: 'Công Chúa',
+          quizQuestions: 'not-an-array',
+          photos: null,
+          coupons: 12345,
+        })
+      );
+    });
+
+    expect(success).toBe(true);
+    expect(capturedContext!.config.quizQuestions).toEqual(
+      DEFAULT_CONFIG.quizQuestions
+    );
+    expect(capturedContext!.config.photos).toEqual(DEFAULT_CONFIG.photos);
+    expect(capturedContext!.config.coupons).toEqual(DEFAULT_CONFIG.coupons);
+  });
+
   it('throws an error when useConfig is used outside of ConfigProvider', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
