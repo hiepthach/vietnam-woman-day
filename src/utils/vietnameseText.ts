@@ -60,3 +60,4 @@ export function cleanVietnameseText(str: string): string {
 
   return s.normalize('NFC');
 }
+

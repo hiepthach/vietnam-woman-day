@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Gift,
   Heart,
   Sparkles,
-  ChevronLeft,
-  ChevronRight,
   RotateCcw,
   PartyPopper,
   Ticket,
@@ -14,6 +12,7 @@ import { useConfig } from '../context/ConfigContext';
 import { soundManager } from '../utils/sound';
 import { triggerConfetti } from '../utils/confetti';
 import { cleanVietnameseText } from '../utils/vietnameseText';
+import { RoseBouquetModal } from './RoseBouquetModal';
 
 export interface GiftLetterScreenProps {
   onRestart: () => void;
@@ -27,9 +26,17 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
   const { config } = useConfig();
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const [activatedCoupons, setActivatedCoupons] = useState<Set<string>>(new Set());
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [isRoseBouquetOpen, setIsRoseBouquetOpen] = useState(false);
+  const fireworksTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const photos = config.photos || [];
+  useEffect(() => {
+    return () => {
+      if (fireworksTimerRef.current) {
+        clearTimeout(fireworksTimerRef.current);
+      }
+    };
+  }, []);
+
   const coupons = config.coupons || [];
   const giftLetter = config.giftLetter;
 
@@ -43,6 +50,14 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
     } finally {
       setIsBoxOpen(true);
     }
+
+    if (fireworksTimerRef.current) {
+      clearTimeout(fireworksTimerRef.current);
+    }
+    // Reveal the gorgeous rose bouquet as the gift box opens and fireworks burst
+    fireworksTimerRef.current = setTimeout(() => {
+      setIsRoseBouquetOpen(true);
+    }, 1200);
   };
 
   const handleUseCoupon = (couponId: string) => {
@@ -59,16 +74,6 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
     });
   };
 
-  const handleNextPhoto = () => {
-    if (photos.length === 0) return;
-    setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
-  };
-
-  const handlePrevPhoto = () => {
-    if (photos.length === 0) return;
-    setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
-  };
-
   const handleFireworks = () => {
     try {
       soundManager.playSuccess();
@@ -76,9 +81,15 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
     } catch {
       // Audio / confetti fallback
     }
-  };
 
-  const currentPhoto = photos[currentPhotoIndex];
+    if (fireworksTimerRef.current) {
+      clearTimeout(fireworksTimerRef.current);
+    }
+    // After fireworks start soaring, smoothly blur and reveal the glowing rose bouquet
+    fireworksTimerRef.current = setTimeout(() => {
+      setIsRoseBouquetOpen(true);
+    }, 1200);
+  };
 
   return (
     <section
@@ -284,94 +295,7 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
             </article>
           )}
 
-          {/* Section 2: Photo Carousel (Polaroid Album) */}
-          {photos.length > 0 && currentPhoto && (
-            <section className="w-full flex flex-col items-center">
-              <div className="text-center mb-4">
-                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-rose-500">
-                  Album Kỷ Niệm 📸
-                </span>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800">
-                  Những Khoảnh Khắc Ngọt Ngào Bên Em
-                </h3>
-              </div>
-
-              <div
-                data-testid="photo-carousel"
-                className="relative w-full max-w-sm mx-auto flex flex-col items-center"
-              >
-                {/* Polaroid Frame */}
-                <div className="bg-white p-3 sm:p-4 pb-6 sm:pb-8 shadow-xl rounded-2xl max-w-sm w-full mx-auto transform hover:rotate-0 transition-transform duration-300 border border-rose-100 flex flex-col items-center">
-                  <div className="w-full h-64 sm:h-72 overflow-hidden rounded-xl bg-rose-50 flex items-center justify-center">
-                    <img
-                      data-testid="carousel-image"
-                      src={currentPhoto.url}
-                      alt={currentPhoto.caption}
-                      className="w-full h-full object-cover transition-all duration-300"
-                    />
-                  </div>
-
-                  {/* Caption & Date Tag */}
-                  <div className="mt-3.5 w-full text-center px-2">
-                    <p
-                      data-testid="carousel-caption"
-                      className="font-medium text-gray-800 text-sm sm:text-base"
-                    >
-                      {currentPhoto.caption}
-                    </p>
-                    {currentPhoto.date && (
-                      <span className="inline-block mt-1 text-[11px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/60">
-                        {currentPhoto.date}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Navigation Controls: Prev / Next Buttons */}
-                <div className="flex items-center justify-between w-full max-w-xs mt-4">
-                  <button
-                    type="button"
-                    data-testid="carousel-prev-btn"
-                    onClick={handlePrevPhoto}
-                    aria-label="Xem ảnh trước"
-                    className="min-h-[44px] min-w-[44px] rounded-full bg-white/90 border border-rose-200 text-rose-600 shadow-md hover:bg-rose-50 hover:border-rose-300 active:scale-95 transition-all flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-300"
-                  >
-                    <ChevronLeft className="w-5 h-5" aria-hidden="true" />
-                  </button>
-
-                  {/* Indicator Dots */}
-                  <div className="flex items-center gap-2">
-                    {photos.map((_, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        data-testid={`carousel-dot-${idx}`}
-                        onClick={() => setCurrentPhotoIndex(idx)}
-                        aria-label={`Chuyển đến ảnh ${idx + 1}`}
-                        className={`transition-all rounded-full cursor-pointer focus:outline-none ${
-                          idx === currentPhotoIndex
-                            ? 'w-6 h-2.5 bg-rose-500'
-                            : 'w-2.5 h-2.5 bg-rose-200 hover:bg-rose-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    data-testid="carousel-next-btn"
-                    onClick={handleNextPhoto}
-                    aria-label="Xem ảnh tiếp theo"
-                    className="min-h-[44px] min-w-[44px] rounded-full bg-white/90 border border-rose-200 text-rose-600 shadow-md hover:bg-rose-50 hover:border-rose-300 active:scale-95 transition-all flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-300"
-                  >
-                    <ChevronRight className="w-5 h-5" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Section 3: Love Coupons (Phiếu Đặc Quyền Yêu Thương) */}
+          {/* Section 2: Love Coupons (Phiếu Đặc Quyền Yêu Thương) */}
           {coupons.length > 0 && (
             <section className="w-full">
               <div className="text-center mb-6">
@@ -472,7 +396,7 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
             </section>
           )}
 
-          {/* Section 4: Footer Controls */}
+          {/* Section 3: Footer Controls */}
           <footer className="w-full flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 border-t border-rose-200/80">
             {/* Replay / Restart Button */}
             <button
@@ -498,6 +422,14 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
           </footer>
         </div>
       )}
+
+      {/* Rose Bouquet Celebration Modal */}
+      <RoseBouquetModal
+        isOpen={isRoseBouquetOpen}
+        onClose={() => setIsRoseBouquetOpen(false)}
+        recipientName={config.recipientName}
+        senderName={config.senderName}
+      />
     </section>
   );
 };

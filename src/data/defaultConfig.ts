@@ -168,5 +168,5 @@ export const DEFAULT_CONFIG: AppConfig = {
       date: 'Mỗi ngày'
     }
   ],
-  bgmUrl: '/audio/romantic-bgm.mp3'
+  bgmUrl: '/audio/thegioicuaanh.mp3'
 };

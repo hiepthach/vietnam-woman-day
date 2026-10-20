@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GiftLetterScreen } from './GiftLetterScreen';
 import { ConfigProvider } from '../context/ConfigContext';
@@ -65,18 +65,30 @@ describe('GiftLetterScreen Component', () => {
       expect(screen.getByTestId('grand-reveal')).toBeInTheDocument();
     });
 
-    it('can also be opened by clicking the gift box directly', () => {
-      const playOpenGiftSpy = vi.spyOn(soundManager, 'playOpenGift').mockImplementation(() => {});
-      const confettiSpy = vi.spyOn(triggerConfetti, 'fireGiftExplosion').mockImplementation(() => {});
+    it('reveals rose bouquet modal after 1200ms delay when opening the gift box', () => {
+      vi.useFakeTimers();
+      vi.spyOn(soundManager, 'playOpenGift').mockImplementation(() => {});
+      vi.spyOn(triggerConfetti, 'fireGiftExplosion').mockImplementation(() => {});
 
       renderGiftLetterScreen();
 
-      const box = screen.getByTestId('unopened-gift-box');
-      fireEvent.click(box);
+      const openBtn = screen.getByTestId('open-gift-button');
+      fireEvent.click(openBtn);
 
-      expect(playOpenGiftSpy).toHaveBeenCalledTimes(1);
-      expect(confettiSpy).toHaveBeenCalledTimes(1);
-      expect(screen.getByTestId('grand-reveal')).toBeInTheDocument();
+      expect(screen.queryByTestId('rose-bouquet-modal')).not.toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+
+      expect(screen.getByTestId('rose-bouquet-modal')).toBeInTheDocument();
+
+      act(() => {
+        fireEvent.click(screen.getByTestId('accept-flower-button'));
+      });
+
+      expect(screen.queryByTestId('rose-bouquet-modal')).not.toBeInTheDocument();
+      vi.useRealTimers();
     });
   });
 
@@ -103,79 +115,6 @@ describe('GiftLetterScreen Component', () => {
       const closing = screen.getByTestId('letter-closing');
       expect(closing).toHaveTextContent(DEFAULT_CONFIG.giftLetter.closing);
       expect(closing).toHaveTextContent(DEFAULT_CONFIG.senderName);
-    });
-  });
-
-  describe('Photo Carousel (Polaroid Album)', () => {
-    it('renders the initial photo, caption, and navigation controls', () => {
-      renderGiftLetterScreen();
-      fireEvent.click(screen.getByTestId('open-gift-button'));
-
-      const carousel = screen.getByTestId('photo-carousel');
-      expect(carousel).toBeInTheDocument();
-
-      const firstPhoto = DEFAULT_CONFIG.photos[0];
-      const img = screen.getByTestId('carousel-image') as HTMLImageElement;
-      expect(img).toBeInTheDocument();
-      expect(img.src).toBe(firstPhoto.url);
-
-      const caption = screen.getByTestId('carousel-caption');
-      expect(caption).toHaveTextContent(firstPhoto.caption);
-
-      expect(screen.getByTestId('carousel-prev-btn')).toBeInTheDocument();
-      expect(screen.getByTestId('carousel-next-btn')).toBeInTheDocument();
-
-      // Check all dot indicators
-      DEFAULT_CONFIG.photos.forEach((_, idx) => {
-        expect(screen.getByTestId(`carousel-dot-${idx}`)).toBeInTheDocument();
-      });
-    });
-
-    it('navigates to next and previous photos via buttons and wraps around', () => {
-      renderGiftLetterScreen();
-      fireEvent.click(screen.getByTestId('open-gift-button'));
-
-      const nextBtn = screen.getByTestId('carousel-next-btn');
-      const prevBtn = screen.getByTestId('carousel-prev-btn');
-
-      // Click Next -> photo index 1
-      fireEvent.click(nextBtn);
-      const secondPhoto = DEFAULT_CONFIG.photos[1];
-      expect(screen.getByTestId('carousel-caption')).toHaveTextContent(secondPhoto.caption);
-
-      // Click Prev -> back to photo index 0
-      fireEvent.click(prevBtn);
-      expect(screen.getByTestId('carousel-caption')).toHaveTextContent(DEFAULT_CONFIG.photos[0].caption);
-
-      // Click Prev from index 0 -> wraps around to last photo
-      fireEvent.click(prevBtn);
-      const lastPhoto = DEFAULT_CONFIG.photos[DEFAULT_CONFIG.photos.length - 1];
-      expect(screen.getByTestId('carousel-caption')).toHaveTextContent(lastPhoto.caption);
-    });
-
-    it('navigates directly to a photo when clicking its dot indicator', () => {
-      renderGiftLetterScreen();
-      fireEvent.click(screen.getByTestId('open-gift-button'));
-
-      const dot2 = screen.getByTestId('carousel-dot-2');
-      fireEvent.click(dot2);
-
-      const thirdPhoto = DEFAULT_CONFIG.photos[2];
-      expect(screen.getByTestId('carousel-caption')).toHaveTextContent(thirdPhoto.caption);
-    });
-
-    it('handles empty photos gracefully without crashing', () => {
-      const customConfig: AppConfig = {
-        ...DEFAULT_CONFIG,
-        photos: [],
-      };
-      localStorage.setItem('vietnam_woman_day_config_v1', JSON.stringify(customConfig));
-
-      renderGiftLetterScreen();
-      fireEvent.click(screen.getByTestId('open-gift-button'));
-
-      expect(screen.getByTestId('grand-reveal')).toBeInTheDocument();
-      expect(screen.queryByTestId('photo-carousel')).not.toBeInTheDocument();
     });
   });
 
@@ -257,7 +196,8 @@ describe('GiftLetterScreen Component', () => {
       expect(onRestart).toHaveBeenCalledTimes(1);
     });
 
-    it('triggers celebratory fireworks confetti when fireworks button is clicked', () => {
+    it('triggers celebratory fireworks confetti and reveals rose bouquet modal after delay when fireworks button is clicked', () => {
+      vi.useFakeTimers();
       const confettiSpy = vi.spyOn(triggerConfetti, 'fireGiftExplosion').mockImplementation(() => {});
       const playSuccessSpy = vi.spyOn(soundManager, 'playSuccess').mockImplementation(() => {});
 
@@ -274,6 +214,24 @@ describe('GiftLetterScreen Component', () => {
       fireEvent.click(fireworksBtn);
       expect(confettiSpy).toHaveBeenCalledTimes(1);
       expect(playSuccessSpy).toHaveBeenCalledTimes(1);
+
+      // Before delay, rose bouquet modal should not be visible yet
+      expect(screen.queryByTestId('rose-bouquet-modal')).not.toBeInTheDocument();
+
+      // Advance timers by 1200ms
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+
+      // Rose bouquet modal should now be visible
+      expect(screen.getByTestId('rose-bouquet-modal')).toBeInTheDocument();
+      expect(screen.getByTestId('rose-bouquet-art')).toBeInTheDocument();
+
+      // Accepting flower closes modal
+      fireEvent.click(screen.getByTestId('accept-flower-button'));
+      expect(screen.queryByTestId('rose-bouquet-modal')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
     });
   });
 
