@@ -1,8 +1,39 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { AppConfig, ConfigContextType } from '../types';
 import { DEFAULT_CONFIG } from '../data/defaultConfig';
+import { cleanVietnameseText } from '../utils/vietnameseText';
 
 export const CONFIG_STORAGE_KEY = 'vietnam_woman_day_config_v1';
+
+export function sanitizeAppConfig(cfg: AppConfig): AppConfig {
+  return {
+    ...cfg,
+    recipientName: cleanVietnameseText(cfg.recipientName),
+    senderName: cleanVietnameseText(cfg.senderName),
+    greetingTitle: cleanVietnameseText(cfg.greetingTitle),
+    greetingSubtitle: cleanVietnameseText(cfg.greetingSubtitle),
+    giftLetter: {
+      title: cleanVietnameseText(cfg.giftLetter.title),
+      paragraphs: (cfg.giftLetter.paragraphs || []).map(cleanVietnameseText),
+      closing: cleanVietnameseText(cfg.giftLetter.closing),
+    },
+    quizQuestions: (cfg.quizQuestions || []).map((q) => ({
+      ...q,
+      question: cleanVietnameseText(q.question),
+      options: (q.options || []).map(cleanVietnameseText),
+      wrongMessage: cleanVietnameseText(q.wrongMessage),
+    })),
+    coupons: (cfg.coupons || []).map((c) => ({
+      ...c,
+      title: cleanVietnameseText(c.title),
+      description: cleanVietnameseText(c.description),
+    })),
+    photos: (cfg.photos || []).map((p) => ({
+      ...p,
+      caption: cleanVietnameseText(p.caption),
+    })),
+  };
+}
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
@@ -14,7 +45,7 @@ function loadInitialConfig(): AppConfig {
     }
     const parsed = JSON.parse(saved);
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return {
+      const merged: AppConfig = {
         ...DEFAULT_CONFIG,
         ...parsed,
         quizQuestions: Array.isArray(parsed.quizQuestions)
@@ -33,6 +64,7 @@ function loadInitialConfig(): AppConfig {
             : {}),
         },
       };
+      return sanitizeAppConfig(merged);
     }
     return DEFAULT_CONFIG;
   } catch (error) {
@@ -45,13 +77,14 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<AppConfig>(loadInitialConfig);
 
   const updateConfig = (newConfig: Partial<AppConfig>) => {
-    const updated: AppConfig = {
+    const rawUpdated: AppConfig = {
       ...config,
       ...newConfig,
       giftLetter: newConfig.giftLetter
         ? { ...config.giftLetter, ...newConfig.giftLetter }
         : config.giftLetter,
     };
+    const updated = sanitizeAppConfig(rawUpdated);
     try {
       localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(updated));
     } catch (error) {
@@ -79,7 +112,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
         return false;
       }
-      const merged: AppConfig = {
+      const rawMerged: AppConfig = {
         ...DEFAULT_CONFIG,
         ...parsed,
         quizQuestions: Array.isArray(parsed.quizQuestions)
@@ -98,6 +131,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
             : {}),
         },
       };
+      const merged = sanitizeAppConfig(rawMerged);
 
       // Transactional storage sync: persist first
       localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(merged));

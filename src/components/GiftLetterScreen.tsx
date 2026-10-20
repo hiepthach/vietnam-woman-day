@@ -13,6 +13,7 @@ import {
 import { useConfig } from '../context/ConfigContext';
 import { soundManager } from '../utils/sound';
 import { triggerConfetti } from '../utils/confetti';
+import { cleanVietnameseText } from '../utils/vietnameseText';
 
 export interface GiftLetterScreenProps {
   onRestart: () => void;
@@ -222,8 +223,8 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
               <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" aria-hidden="true" />
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 tracking-tight">
-              Món Quà Tình Yêu Dành Tặng {config.recipientName} 💖
+            <h1 className="font-heading text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 tracking-tight">
+              Món Quà Tình Yêu Dành Tặng {cleanVietnameseText(config.recipientName)} 💖
             </h1>
           </header>
 
@@ -231,7 +232,7 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
           {giftLetter && (
             <article
               data-testid="love-letter-card"
-              className="bg-amber-50/90 border border-amber-200/80 rounded-3xl p-6 sm:p-10 shadow-2xl font-serif relative overflow-hidden backdrop-blur-sm transition-all hover:shadow-rose-200/40"
+              className="bg-gradient-to-b from-amber-50/95 via-rose-50/30 to-amber-50/95 border border-amber-200/90 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden backdrop-blur-sm transition-all hover:shadow-rose-200/50"
             >
               {/* Decorative Corner Ornaments */}
               <div
@@ -250,20 +251,20 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
               {/* Letter Title */}
               <h2
                 data-testid="letter-title"
-                className="text-xl sm:text-2xl font-bold text-amber-950 text-center mb-6 pb-3 border-b border-amber-200/60 font-serif"
+                className="font-heading text-2xl sm:text-3xl font-bold text-amber-950 text-center mb-6 pb-3 border-b border-amber-200/70 tracking-normal"
               >
-                {giftLetter.title}
+                {cleanVietnameseText(giftLetter.title)}
               </h2>
 
               {/* Letter Paragraphs */}
-              <div className="space-y-4 text-amber-900/90 text-sm sm:text-base leading-relaxed tracking-wide">
+              <div className="space-y-5 text-amber-950/90 text-base sm:text-lg leading-relaxed sm:leading-loose font-serif text-left">
                 {giftLetter.paragraphs.map((paragraph, idx) => (
                   <p
                     key={idx}
                     data-testid={`letter-paragraph-${idx}`}
-                    className="indent-6 sm:indent-8 text-justify"
+                    className="indent-6 sm:indent-8"
                   >
-                    {paragraph}
+                    {cleanVietnameseText(paragraph)}
                   </p>
                 ))}
               </div>
@@ -271,13 +272,13 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
               {/* Letter Closing & Sender Signature */}
               <div
                 data-testid="letter-closing"
-                className="mt-8 pt-4 border-t border-amber-200/60 text-right font-serif"
+                className="mt-8 pt-4 border-t border-amber-200/70 text-right"
               >
-                <p className="text-amber-800 italic text-sm sm:text-base mb-1">
-                  {giftLetter.closing}
+                <p className="font-handwriting text-2xl sm:text-3xl text-rose-700 mb-1">
+                  {cleanVietnameseText(giftLetter.closing)}
                 </p>
-                <p className="text-rose-600 font-bold text-base sm:text-lg">
-                  {config.senderName} ❤️
+                <p className="font-heading font-bold text-xl sm:text-2xl text-rose-600">
+                  {cleanVietnameseText(config.senderName)} ❤️
                 </p>
               </div>
             </article>

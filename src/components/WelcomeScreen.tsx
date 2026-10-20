@@ -2,6 +2,7 @@ import React from 'react';
 import { Crown, Heart, Sparkles } from 'lucide-react';
 import { useConfig } from '../context/ConfigContext';
 import { soundManager } from '../utils/sound';
+import { cleanVietnameseText } from '../utils/vietnameseText';
 
 export interface WelcomeScreenProps {
   onStart: () => void;
@@ -57,20 +58,20 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, className
           <span className="text-xs sm:text-sm font-medium text-rose-500 tracking-wider uppercase">
             Gửi tặng
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mt-0.5 mb-3 flex items-center justify-center gap-2">
-            <span>{config.recipientName}</span>
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-gray-800 mt-0.5 mb-3 flex items-center justify-center gap-2">
+            <span>{cleanVietnameseText(config.recipientName)}</span>
             <Heart className="w-5 h-5 text-rose-500 fill-rose-500 inline-block animate-bounce" aria-hidden="true" />
           </h2>
         </div>
 
         {/* Romantic Greeting Title */}
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 tracking-tight mb-4">
-          {config.greetingTitle}
+        <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 tracking-tight mb-4">
+          {cleanVietnameseText(config.greetingTitle)}
         </h1>
 
         {/* Romantic Greeting Subtitle */}
         <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-8 max-w-md mx-auto">
-          {config.greetingSubtitle}
+          {cleanVietnameseText(config.greetingSubtitle)}
         </p>
 
         {/* Interactive Pulsating Start Button */}

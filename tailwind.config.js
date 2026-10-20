@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Be Vietnam Pro"', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Lora', 'Georgia', 'Cambria', 'serif'],
+        heading: ['"Playfair Display"', 'Lora', 'Georgia', 'serif'],
+        handwriting: ['"Dancing Script"', 'cursive'],
+      },
       colors: {
         romantic: {
           50: '#fff1f2',

@@ -20,6 +20,7 @@ import {
 import { useConfig } from '../context/ConfigContext';
 import { compressImage } from '../utils/imageCompression';
 import { soundManager } from '../utils/sound';
+import { cleanVietnameseText } from '../utils/vietnameseText';
 import { AppConfig, QuizQuestion, LoveCoupon, PhotoItem } from '../types';
 import { DEFAULT_CONFIG } from '../data/defaultConfig';
 
@@ -43,6 +44,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     message: string;
   } | null>(null);
   const [resetFeedback, setResetFeedback] = useState<string | null>(null);
+  const [fixFeedback, setFixFeedback] = useState<string | null>(null);
   const [isPlayingTestBgm, setIsPlayingTestBgm] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -399,12 +401,41 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleAutoFixLetterFormatting = () => {
+    setLocalDraft((prev) => ({
+      ...prev,
+      recipientName: cleanVietnameseText(prev.recipientName),
+      senderName: cleanVietnameseText(prev.senderName),
+      greetingTitle: cleanVietnameseText(prev.greetingTitle),
+      greetingSubtitle: cleanVietnameseText(prev.greetingSubtitle),
+      giftLetter: {
+        title: cleanVietnameseText(prev.giftLetter.title),
+        paragraphs: prev.giftLetter.paragraphs.map(cleanVietnameseText),
+        closing: cleanVietnameseText(prev.giftLetter.closing),
+      },
+    }));
+    setFixFeedback('Đã tự động sửa các lỗi tách dấu tiếng Việt!');
+    setTimeout(() => setFixFeedback(null), 3000);
+  };
+
   const handleSaveAndClose = () => {
     if (soundManager.isPlayingBgm()) {
       soundManager.pauseBgm();
       setIsPlayingTestBgm(false);
     }
-    updateConfig(localDraft);
+    const sanitizedDraft: AppConfig = {
+      ...localDraft,
+      recipientName: cleanVietnameseText(localDraft.recipientName),
+      senderName: cleanVietnameseText(localDraft.senderName),
+      greetingTitle: cleanVietnameseText(localDraft.greetingTitle),
+      greetingSubtitle: cleanVietnameseText(localDraft.greetingSubtitle),
+      giftLetter: {
+        title: cleanVietnameseText(localDraft.giftLetter.title),
+        paragraphs: localDraft.giftLetter.paragraphs.map(cleanVietnameseText),
+        closing: cleanVietnameseText(localDraft.giftLetter.closing),
+      },
+    };
+    updateConfig(sanitizedDraft);
     onClose();
   };
 
@@ -883,19 +914,37 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Các đoạn văn trong bức thư
                     </span>
-                    <button
-                      type="button"
-                      onClick={handleAddParagraph}
-                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors min-h-[36px]"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Thêm đoạn văn</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAutoFixLetterFormatting}
+                        title="Tự động sửa lỗi gõ tách dấu/dấu rời do bàn phím Unikey/Telex"
+                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors min-h-[36px]"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Sửa lỗi dấu tiếng Việt ✨</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddParagraph}
+                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors min-h-[36px]"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Thêm đoạn văn</span>
+                      </button>
+                    </div>
                   </div>
+
+                  {fixFeedback && (
+                    <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-1.5 animate-fade-in">
+                      <Check className="w-4 h-4 text-emerald-500" />
+                      <span>{fixFeedback}</span>
+                    </div>
+                  )}
 
                   {localDraft.giftLetter.paragraphs.map((p, pIdx) => (
                     <div key={pIdx} className="flex gap-2 items-start">
