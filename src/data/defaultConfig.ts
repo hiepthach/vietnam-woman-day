@@ -63,8 +63,8 @@ const svgSmile = `data:image/svg+xml;utf8,${encodeURIComponent(`
 `)}`;
 
 export const DEFAULT_CONFIG: AppConfig = {
-  recipientName: 'Em Yêu',
-  senderName: 'Anh',
+  recipientName: 'Vợ yêu',
+  senderName: 'Chồng yêu',
   greetingTitle: 'Chúc Mừng Ngày Phụ Nữ Việt Nam 20/10',
   greetingSubtitle: 'Dành tặng người con gái tuyệt vời nhất của anh một ngày thật trọn vẹn và hạnh phúc 💖',
   quizQuestions: [
@@ -73,7 +73,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       question: 'Ngày hai đứa mình chính thức bắt đầu câu chuyện tình yêu ngọt ngào là ngày nào ta?',
       options: [
         'Hôm qua mới yêu',
-        'Ngày kỷ niệm thiêng liêng của hai đứa',
+        'Ngày sinh Bác Hồ',
         'Không nhớ nữa (chuẩn bị ăn đòn nha)',
         'Ngày mai mới tính'
       ],
@@ -114,7 +114,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       'Chúc cô gái của anh luôn xinh đẹp rạng rỡ, tự tin, hạnh phúc và luôn giữ được nụ cười tỏa nắng trên môi. Mong em luôn được yêu thương, chiều chuộng không chỉ riêng ngày 20/10 mà trong suốt 365 ngày của năm.',
       'Dù chặng đường phía trước có ra sao, anh vẫn luôn ở đây, đồng hành, lắng nghe, che chở và yêu thương em bằng tất cả trái tim mình. Yêu em nhiều hơn những gì lời nói có thể diễn tả! ❤️'
     ],
-    closing: 'Mãi yêu em, chàng trai của em 💌'
+    closing: 'Mãi yêu em, công chúa của anh 💌'
   },
   coupons: [
     {
