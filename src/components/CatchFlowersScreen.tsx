@@ -40,6 +40,9 @@ export const CatchFlowersScreen: React.FC<CatchFlowersScreenProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
 
   // Refs for animation loop state to avoid closure staleness and StrictMode duplication
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
   const gameAreaRef = useRef<HTMLDivElement | null>(null);
   const itemsRef = useRef<FallingItem[]>([]);
   const scoreRef = useRef(0);
@@ -56,9 +59,9 @@ export const CatchFlowersScreen: React.FC<CatchFlowersScreenProps> = ({
   useEffect(() => {
     targetRef.current = target;
     if (target <= 0) {
-      onComplete();
+      onCompleteRef.current();
     }
-  }, [target, onComplete]);
+  }, [target]);
 
   // Keep basketXRef in sync with state
   useEffect(() => {
@@ -97,21 +100,24 @@ export const CatchFlowersScreen: React.FC<CatchFlowersScreenProps> = ({
     triggerConfetti.fireFlowerPetals();
 
     celebrationTimeoutRef.current = setTimeout(() => {
-      onComplete();
+      onCompleteRef.current();
     }, 1200);
-  }, [onComplete]);
+  }, []);
 
   const handleSkip = useCallback(() => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
     setIsCompleted(true);
-    onComplete();
-  }, [onComplete]);
+    onCompleteRef.current();
+  }, []);
 
   // Handle catching an item (either via collision detection or direct click)
   const catchItem = useCallback(
     (item: FallingItem) => {
       if (isCompletedRef.current) return;
+
+      // Guard against duplicate catches if touched and collided simultaneously
+      if (!itemsRef.current.some((it) => it.id === item.id)) return;
 
       // Remove from ref and state
       itemsRef.current = itemsRef.current.filter((it) => it.id !== item.id);
@@ -243,15 +249,18 @@ export const CatchFlowersScreen: React.FC<CatchFlowersScreenProps> = ({
           // If nextY >= 105, item fell off-screen
         }
 
-        itemsRef.current = nextItems;
-        setFallingItems(nextItems);
-
-        // Process caught items
+        // Process caught items (catchItem guards against duplicates and updates score)
         if (caughtList.length > 0) {
           caughtList.forEach((it) => {
             catchItem(it);
           });
         }
+
+        // Update positions of remaining un-caught items
+        itemsRef.current = nextItems.filter(
+          (item) => !caughtList.some((c) => c.id === item.id)
+        );
+        setFallingItems([...itemsRef.current]);
       }
 
       if (!isCompletedRef.current) {

@@ -222,6 +222,55 @@ describe('CatchFlowersScreen Component', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
+  it('guards against duplicate catch triggers if an item is caught multiple times simultaneously', () => {
+    const playPopSpy = vi.spyOn(soundManager, 'playPop').mockImplementation(() => {});
+
+    renderCatchFlowersScreen();
+
+    const items = screen.getAllByTestId('falling-item');
+    const firstItem = items[0];
+
+    // Fire two click events simultaneously on the same item
+    fireEvent.click(firstItem);
+    fireEvent.click(firstItem);
+
+    // Pop sound and score should only increment once
+    expect(playPopSpy).toHaveBeenCalledTimes(1);
+    const progressText = screen.getByTestId('score-progress-text');
+    expect(progressText).toHaveTextContent(/Đã hái:\s*1\s*\/\s*10\s*bông hoa/i);
+  });
+
+  it('stabilizes onComplete callback with ref so parent re-renders do not reset game state', () => {
+    const initialOnComplete = vi.fn();
+    const updatedOnComplete = vi.fn();
+
+    const { rerender } = render(
+      <ConfigProvider>
+        <CatchFlowersScreen onComplete={initialOnComplete} />
+      </ConfigProvider>
+    );
+
+    // Catch one flower
+    const items = screen.getAllByTestId('falling-item');
+    fireEvent.click(items[0]);
+    expect(screen.getByTestId('score-progress-text')).toHaveTextContent(/Đã hái:\s*1\s*\/\s*10\s*bông hoa/i);
+
+    // Parent re-renders with new inline arrow function
+    rerender(
+      <ConfigProvider>
+        <CatchFlowersScreen onComplete={updatedOnComplete} />
+      </ConfigProvider>
+    );
+
+    // Score remains 1 and does not reset to 0
+    expect(screen.getByTestId('score-progress-text')).toHaveTextContent(/Đã hái:\s*1\s*\/\s*10\s*bông hoa/i);
+
+    // Skip button should now call updatedOnComplete
+    fireEvent.click(screen.getByTestId('skip-button'));
+    expect(updatedOnComplete).toHaveBeenCalledTimes(1);
+    expect(initialOnComplete).not.toHaveBeenCalled();
+  });
+
   it('cleans up requestAnimationFrame, spawn intervals, and timeouts on unmount', () => {
     const cancelRafSpy = vi.spyOn(window, 'cancelAnimationFrame');
     const { unmount } = renderCatchFlowersScreen();
