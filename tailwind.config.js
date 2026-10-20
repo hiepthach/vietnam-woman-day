@@ -28,11 +28,28 @@ export default {
         pulseGlow: {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
           '50%': { transform: 'scale(1.05)', opacity: '0.85' },
-        }
+        },
+        'float-up': {
+          '0%': {
+            transform: 'translateY(0) scale(0.7) rotate(0deg)',
+            opacity: '0',
+          },
+          '15%': {
+            opacity: '0.85',
+          },
+          '85%': {
+            opacity: '0.85',
+          },
+          '100%': {
+            transform: 'translateY(-115vh) scale(1.2) rotate(360deg)',
+            opacity: '0',
+          },
+        },
       },
       animation: {
         float: 'float 3s ease-in-out infinite',
         'pulse-slow': 'pulseGlow 2s ease-in-out infinite',
+        'float-up': 'float-up linear infinite',
       }
     },
   },

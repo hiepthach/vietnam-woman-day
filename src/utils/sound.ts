@@ -1,8 +1,11 @@
+export type BgmStateListener = (isPlaying: boolean) => void;
+
 export class SoundManager {
   private bgmAudio: HTMLAudioElement | null = null;
   private muted = false;
   private currentBgmUrl = '';
   private audioCtx: AudioContext | null = null;
+  private bgmListeners: Set<BgmStateListener> = new Set();
 
   private getAudioContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
@@ -28,6 +31,24 @@ export class SoundManager {
     }
   }
 
+  subscribe(listener: BgmStateListener): () => void {
+    this.bgmListeners.add(listener);
+    return () => {
+      this.bgmListeners.delete(listener);
+    };
+  }
+
+  private notifyBgmState(): void {
+    const playing = this.isPlayingBgm();
+    this.bgmListeners.forEach((listener) => {
+      try {
+        listener(playing);
+      } catch {
+        // Audio listener failed silently
+      }
+    });
+  }
+
   isMuted(): boolean {
     return this.muted;
   }
@@ -45,6 +66,11 @@ export class SoundManager {
     if (!this.bgmAudio) {
       this.bgmAudio = new Audio();
       this.bgmAudio.loop = true;
+      if (typeof this.bgmAudio.addEventListener === 'function') {
+        this.bgmAudio.addEventListener('play', () => this.notifyBgmState());
+        this.bgmAudio.addEventListener('pause', () => this.notifyBgmState());
+        this.bgmAudio.addEventListener('ended', () => this.notifyBgmState());
+      }
     }
 
     this.bgmAudio.muted = this.muted;
@@ -63,6 +89,8 @@ export class SoundManager {
       if (this.bgmAudio) {
         this.bgmAudio.pause();
       }
+    } finally {
+      this.notifyBgmState();
     }
   }
 
@@ -70,6 +98,7 @@ export class SoundManager {
     if (this.bgmAudio) {
       this.bgmAudio.pause();
     }
+    this.notifyBgmState();
   }
 
   async toggleBgm(url?: string): Promise<void> {
@@ -188,6 +217,7 @@ export class SoundManager {
     this.audioCtx = null;
     this.muted = false;
     this.currentBgmUrl = '';
+    this.bgmListeners.clear();
   }
 }
 

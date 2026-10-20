@@ -53,27 +53,6 @@ export const FloatingHearts: React.FC<FloatingHeartsProps> = ({
       aria-hidden="true"
       className={`pointer-events-none fixed inset-0 overflow-hidden select-none z-0 ${className}`.trim()}
     >
-      <style>{`
-        @keyframes float-up {
-          0% {
-            transform: translateY(105vh) scale(0.7) rotate(0deg);
-            opacity: 0;
-          }
-          15% {
-            opacity: 0.85;
-          }
-          85% {
-            opacity: 0.85;
-          }
-          100% {
-            transform: translateY(-15vh) scale(1.2) rotate(360deg);
-            opacity: 0;
-          }
-        }
-        .animate-float-up {
-          animation: float-up linear infinite;
-        }
-      `}</style>
       {particles.map((particle) => (
         <span
           key={particle.id}

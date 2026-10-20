@@ -174,6 +174,21 @@ describe('soundManager', () => {
       expect(soundManager.isPlayingBgm()).toBe(true);
       expect(mockAudioInstance.src).toBe('https://example.com/existing.mp3');
     });
+
+    it('notifies subscribers when BGM plays and pauses', async () => {
+      const listener = vi.fn();
+      const unsubscribe = soundManager.subscribe(listener);
+
+      await soundManager.playBgm('https://example.com/stream.mp3');
+      expect(listener).toHaveBeenCalledWith(true);
+
+      soundManager.pauseBgm();
+      expect(listener).toHaveBeenCalledWith(false);
+
+      unsubscribe();
+      await soundManager.playBgm();
+      expect(listener).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('Synthetic Sound Effects', () => {

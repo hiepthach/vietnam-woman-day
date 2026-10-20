@@ -13,6 +13,10 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ className = '' }) => {
 
   useEffect(() => {
     setIsPlaying(soundManager.isPlayingBgm());
+    const unsubscribe = soundManager.subscribe((playing) => {
+      setIsPlaying(playing);
+    });
+    return unsubscribe;
   }, []);
 
   const handleToggle = async () => {
@@ -35,7 +39,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ className = '' }) => {
         type="button"
         onClick={handleToggle}
         aria-label={isPlaying ? 'Tắt nhạc nền' : 'Bật nhạc nền'}
-        className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md shadow-md border border-rose-200/80 hover:bg-white hover:border-rose-300 hover:shadow-lg active:scale-95 transition-all text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-1 cursor-pointer"
+        className="flex items-center gap-2.5 px-3 py-1.5 min-h-[44px] rounded-full bg-white/90 backdrop-blur-md shadow-md border border-rose-200/80 hover:bg-white hover:border-rose-300 hover:shadow-lg active:scale-95 transition-all text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-1 cursor-pointer"
       >
         {/* Spinning Vinyl Disc Icon */}
         <div

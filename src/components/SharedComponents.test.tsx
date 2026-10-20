@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FloatingHearts } from './FloatingHearts';
 import { MusicPlayer } from './MusicPlayer';
@@ -71,11 +71,12 @@ describe('MusicPlayer Component', () => {
     expect(player).toHaveClass('z-50');
   });
 
-  it('renders a clickable button with accessible label', () => {
+  it('renders a clickable button with accessible label and minimum 44px touch target', () => {
     renderWithConfig(<MusicPlayer />);
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
     expect(button).toHaveAttribute('aria-label');
+    expect(button).toHaveClass('min-h-[44px]');
   });
 
   it('calls soundManager.toggleBgm with config bgmUrl when clicked', async () => {
@@ -130,5 +131,47 @@ describe('MusicPlayer Component', () => {
     const button = screen.getByRole('button');
 
     expect(() => fireEvent.click(button)).not.toThrow();
+  });
+
+  it('synchronizes playing state when soundManager updates externally via subscription', async () => {
+    let subscriber: ((playing: boolean) => void) | null = null;
+    vi.spyOn(soundManager, 'subscribe').mockImplementation((cb) => {
+      subscriber = cb;
+      return () => {
+        subscriber = null;
+      };
+    });
+
+    renderWithConfig(<MusicPlayer />);
+    const disc = screen.getByTestId('music-disc');
+    const equalizer = screen.getByTestId('music-equalizer');
+
+    // External event: BGM starts (e.g. WelcomeScreen interaction)
+    expect(disc).not.toHaveClass('animate-spin');
+    expect(equalizer).toHaveAttribute('data-playing', 'false');
+
+    await waitFor(() => {
+      expect(subscriber).not.toBeNull();
+    });
+
+    // Simulate external playback notification
+    act(() => {
+      subscriber!(true);
+    });
+
+    await waitFor(() => {
+      expect(disc).toHaveClass('animate-spin');
+      expect(equalizer).toHaveAttribute('data-playing', 'true');
+    });
+
+    // Simulate external pause notification
+    act(() => {
+      subscriber!(false);
+    });
+
+    await waitFor(() => {
+      expect(disc).not.toHaveClass('animate-spin');
+      expect(equalizer).toHaveAttribute('data-playing', 'false');
+    });
   });
 });
