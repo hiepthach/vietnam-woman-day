@@ -53,6 +53,7 @@ describe('QuizScreen Component', () => {
 
     const progressText = screen.getByTestId('quiz-progress-text');
     expect(progressText).toHaveTextContent(/Câu hỏi\s*1\s*\/\s*3/i);
+    expect(screen.getByText(/33%\s*Hoàn thành/i)).toBeInTheDocument();
   });
 
   it('displays the first question and its options from config', () => {

@@ -393,7 +393,7 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
                     <div
                       key={coupon.id}
                       data-testid={`coupon-card-${coupon.id}`}
-                      className="border-2 border-dashed border-rose-300 bg-rose-50/80 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow backdrop-blur-xs min-h-[160px]"
+                      className="border-2 border-dashed border-rose-300 bg-rose-50/80 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow backdrop-blur-sm min-h-[160px]"
                     >
                       {/* Ticket Notch Cutouts */}
                       <div
@@ -458,7 +458,7 @@ export const GiftLetterScreen: React.FC<GiftLetterScreenProps> = ({
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
                           <div
                             data-testid={`coupon-stamp-${coupon.id}`}
-                            className="border-4 border-red-500 text-red-600 font-black text-lg sm:text-xl px-4 py-1.5 rounded-lg -rotate-12 uppercase tracking-widest bg-white/80 backdrop-blur-xs shadow-md animate-stamp"
+                            className="border-4 border-red-500 text-red-600 font-black text-lg sm:text-xl px-4 py-1.5 rounded-lg -rotate-12 uppercase tracking-widest bg-white/80 backdrop-blur-sm shadow-md animate-stamp"
                           >
                             ĐÃ SỬ DỤNG ❤️
                           </div>

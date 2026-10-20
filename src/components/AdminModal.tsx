@@ -139,10 +139,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
-  const handleUpdateQuestion = (
+  const handleUpdateQuestion = <K extends keyof QuizQuestion>(
     index: number,
-    field: keyof QuizQuestion,
-    value: any
+    field: K,
+    value: QuizQuestion[K]
   ) => {
     setLocalDraft((prev) => {
       const updated = [...prev.quizQuestions];

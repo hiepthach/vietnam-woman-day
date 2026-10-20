@@ -134,7 +134,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({ onComplete, className = 
             <span data-testid="quiz-progress-text">
               Câu hỏi {currentIndex + 1} / {totalQuestions}
             </span>
-            <span>{Math.round(((currentIndex + (isCompleted ? 1 : 0)) / totalQuestions) * 100)}% Hoàn thành</span>
+            <span>{Math.round(((currentIndex + 1) / totalQuestions) * 100)}% Hoàn thành</span>
           </div>
 
           <div

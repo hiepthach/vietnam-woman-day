@@ -82,7 +82,7 @@ export function AppContent() {
         onMouseDown={handleStartPress}
         onMouseUp={handleCancelPress}
         onMouseLeave={handleCancelPress}
-        className="fixed bottom-3 left-3 z-40 opacity-20 hover:opacity-70 transition-opacity p-2 rounded-full bg-white/40 hover:bg-white/80 backdrop-blur-xs border border-rose-200/40 text-rose-300 hover:text-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-300 cursor-pointer select-none"
+        className="fixed bottom-3 left-3 z-40 opacity-20 hover:opacity-70 transition-opacity p-2 rounded-full bg-white/40 hover:bg-white/80 backdrop-blur-sm border border-rose-200/40 text-rose-300 hover:text-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-300 cursor-pointer select-none"
       >
         <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
       </button>
