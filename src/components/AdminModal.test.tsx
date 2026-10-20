@@ -68,6 +68,12 @@ describe('AdminModal Component', () => {
       fireEvent.click(cancelBtn);
       expect(onCloseMock).toHaveBeenCalledTimes(1);
     });
+
+    it('calls onClose when pressing Escape key', () => {
+      renderModal(true);
+      fireEvent.keyDown(window, { key: 'Escape' });
+      expect(onCloseMock).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('Tab Navigation', () => {
@@ -333,7 +339,7 @@ describe('AdminModal Component', () => {
       ).toBeInTheDocument();
     });
 
-    it('imports config when valid JSON is entered', async () => {
+    it('imports config when valid JSON is entered and updates draft across tabs', async () => {
       renderModal(true);
       fireEvent.click(screen.getByRole('tab', { name: /Nhạc nền/i }));
 
@@ -355,6 +361,24 @@ describe('AdminModal Component', () => {
           screen.getByText(/Nhập cấu hình thành công/i)
         ).toBeInTheDocument();
       });
+
+      // Switch back to General tab and verify recipientName immediately reflects imported data
+      fireEvent.click(screen.getByRole('tab', { name: /Thông tin chung/i }));
+      expect(screen.getByLabelText(/Tên người nhận/i)).toHaveValue(
+        'Công Chúa Của Anh'
+      );
+      expect(screen.getByLabelText(/Tên người gửi/i)).toHaveValue('Hoàng Tử');
+    });
+
+    it('pauses BGM preview when closing modal', () => {
+      vi.spyOn(soundManager, 'isPlayingBgm').mockReturnValue(true);
+      const pauseBgmSpy = vi.spyOn(soundManager, 'pauseBgm').mockImplementation(() => {});
+
+      renderModal(true);
+      const closeBtn = screen.getByLabelText(/Đóng/i);
+      fireEvent.click(closeBtn);
+
+      expect(pauseBgmSpy).toHaveBeenCalled();
     });
 
     it('shows error message when importing invalid JSON', async () => {

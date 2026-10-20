@@ -60,6 +60,48 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  // Clean up BGM preview if modal unmounts
+  useEffect(() => {
+    return () => {
+      if (soundManager.isPlayingBgm()) {
+        soundManager.pauseBgm();
+      }
+    };
+  }, []);
+
+  // Clean up BGM preview when modal closes
+  useEffect(() => {
+    if (!isOpen && soundManager.isPlayingBgm()) {
+      soundManager.pauseBgm();
+      setIsPlayingTestBgm(false);
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    if (soundManager.isPlayingBgm()) {
+      soundManager.pauseBgm();
+      setIsPlayingTestBgm(false);
+    }
+    onClose();
+  };
+
+  // Escape key listener to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, onClose]);
+
   if (!isOpen) {
     return null;
   }
@@ -306,15 +348,26 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
       const success = importConfig(importJsonInput);
       if (success) {
-        setLocalDraft((prev) => ({
+        const merged: AppConfig = {
           ...DEFAULT_CONFIG,
-          ...prev,
           ...parsed,
+          quizQuestions: Array.isArray(parsed.quizQuestions)
+            ? parsed.quizQuestions
+            : DEFAULT_CONFIG.quizQuestions,
+          photos: Array.isArray(parsed.photos)
+            ? parsed.photos
+            : DEFAULT_CONFIG.photos,
+          coupons: Array.isArray(parsed.coupons)
+            ? parsed.coupons
+            : DEFAULT_CONFIG.coupons,
           giftLetter: {
-            ...prev.giftLetter,
-            ...(parsed.giftLetter || {}),
+            ...DEFAULT_CONFIG.giftLetter,
+            ...(parsed.giftLetter && typeof parsed.giftLetter === 'object'
+              ? parsed.giftLetter
+              : {}),
           },
-        }));
+        };
+        setLocalDraft(merged);
         setImportFeedback({
           type: 'success',
           message: 'Nhập cấu hình thành công!',
@@ -347,6 +400,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleSaveAndClose = () => {
+    if (soundManager.isPlayingBgm()) {
+      soundManager.pauseBgm();
+      setIsPlayingTestBgm(false);
+    }
     updateConfig(localDraft);
     onClose();
   };
@@ -384,7 +441,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             aria-label="Đóng"
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
@@ -1119,7 +1176,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         <div className="border-t border-rose-100 dark:border-slate-800 p-4 bg-rose-50/30 dark:bg-slate-800/40 flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold transition-all min-h-[44px]"
           >
             Hủy
