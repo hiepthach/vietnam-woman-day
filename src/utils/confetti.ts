@@ -3,6 +3,8 @@ import confetti from 'canvas-confetti';
 const ROMANTIC_PALETTE = ['#ff4d6d', '#ff758f', '#ff85a1', '#fbb1bd', '#ffd166', '#ffffff'];
 const JOYFUL_PALETTE = ['#ff4d6d', '#ffd166', '#06d6a0', '#118ab2', '#ff758f'];
 
+let giftExplosionInterval: ReturnType<typeof setInterval> | null = null;
+
 export const triggerConfetti = {
   /**
    * Soft falling petals / confetti with romantic pink, rose, gold, and white colors
@@ -23,9 +25,15 @@ export const triggerConfetti = {
   },
 
   /**
-   * Full screen fireworks / confetti explosion lasting 3-4s
+   * Full screen fireworks / confetti explosion lasting 3-4s.
+   * Clears any active interval if triggered repeatedly.
    */
   fireGiftExplosion: () => {
+    if (giftExplosionInterval !== null) {
+      clearInterval(giftExplosionInterval);
+      giftExplosionInterval = null;
+    }
+
     // Immediate centerpiece burst
     confetti({
       particleCount: 100,
@@ -38,11 +46,14 @@ export const triggerConfetti = {
     const duration = 3500;
     const animationEnd = Date.now() + duration;
 
-    const interval: ReturnType<typeof setInterval> = setInterval(() => {
+    giftExplosionInterval = setInterval(() => {
       const timeLeft = animationEnd - Date.now();
 
       if (timeLeft <= 0) {
-        clearInterval(interval);
+        if (giftExplosionInterval !== null) {
+          clearInterval(giftExplosionInterval);
+          giftExplosionInterval = null;
+        }
         return;
       }
 

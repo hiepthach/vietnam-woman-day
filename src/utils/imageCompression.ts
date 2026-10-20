@@ -2,7 +2,7 @@
  * Compresses an image file proportionally using HTML5 Canvas and returns a base64 JPEG data URL.
  *
  * @param file - The image file to compress
- * @param maxWidth - The maximum width in pixels (default: 800)
+ * @param maxWidth - The maximum width/dimension in pixels (default: 800)
  * @param quality - The JPEG quality from 0.0 to 1.0 (default: 0.75)
  * @returns Promise resolving to the compressed base64 JPEG data URL
  */
@@ -29,9 +29,10 @@ export function compressImage(
         let width = img.width;
         let height = img.height;
 
-        if (width > maxWidth) {
-          const ratio = maxWidth / width;
-          width = maxWidth;
+        const maxDimension = maxWidth;
+        if (width > maxDimension || height > maxDimension) {
+          const ratio = Math.min(maxDimension / width, maxDimension / height);
+          width = Math.round(width * ratio);
           height = Math.round(height * ratio);
         }
 
@@ -45,6 +46,10 @@ export function compressImage(
           resolve(reader.result as string);
           return;
         }
+
+        // Fill white background to prevent transparent PNGs from having black backgrounds in JPEG
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
 
         ctx.drawImage(img, 0, 0, width, height);
         const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);

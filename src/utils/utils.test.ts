@@ -277,24 +277,46 @@ describe('triggerConfetti', () => {
     vi.advanceTimersByTime(2000);
     expect(vi.mocked(confetti).mock.calls.length).toBe(stoppedCount);
   });
+
+  it('clears active interval when fireGiftExplosion is triggered repeatedly', () => {
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
+
+    triggerConfetti.fireGiftExplosion();
+    expect(clearIntervalSpy).not.toHaveBeenCalled();
+
+    // Trigger again before previous duration ends
+    triggerConfetti.fireGiftExplosion();
+    expect(clearIntervalSpy).toHaveBeenCalled();
+  });
 });
 
 describe('compressImage', () => {
   let mockDrawImage: ReturnType<typeof vi.fn>;
+  let mockFillRect: ReturnType<typeof vi.fn>;
   let mockToDataURL: ReturnType<typeof vi.fn>;
+  let mockContext: {
+    fillStyle: string;
+    fillRect: ReturnType<typeof vi.fn>;
+    drawImage: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     mockDrawImage = vi.fn();
+    mockFillRect = vi.fn();
     mockToDataURL = vi.fn().mockReturnValue('data:image/jpeg;base64,mockCompressedData');
+
+    mockContext = {
+      fillStyle: '',
+      fillRect: mockFillRect,
+      drawImage: mockDrawImage,
+    };
 
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (
       this: HTMLCanvasElement,
       contextId: string
     ) {
       if (contextId === '2d') {
-        return {
-          drawImage: mockDrawImage,
-        } as unknown as CanvasRenderingContext2D;
+        return mockContext as unknown as CanvasRenderingContext2D;
       }
       return null;
     });
@@ -355,13 +377,36 @@ describe('compressImage', () => {
     vi.restoreAllMocks();
   });
 
-  it('resizes image proportionally when width > maxWidth (e.g. 1600x1200 -> 800x600)', async () => {
-    const file = new File(['dummy content'], 'photo.jpg', { type: 'image/jpeg' });
+  it('resizes image proportionally when width > maxWidth (e.g. 1600x1200 -> 800x600) and fills white background', async () => {
+    const file = new File(['dummy content'], 'photo.png', { type: 'image/png' });
     const result = await compressImage(file, 800, 0.75);
 
     expect(result).toBe('data:image/jpeg;base64,mockCompressedData');
+    expect(mockContext.fillStyle).toBe('#ffffff');
+    expect(mockFillRect).toHaveBeenCalledWith(0, 0, 800, 600);
     expect(mockDrawImage).toHaveBeenCalledWith(expect.any(Object), 0, 0, 800, 600);
     expect(mockToDataURL).toHaveBeenCalledWith('image/jpeg', 0.75);
+  });
+
+  it('resizes portrait image proportionally when height > maxDimension (e.g. 900x1200 -> 600x800)', async () => {
+    vi.stubGlobal(
+      'Image',
+      class {
+        width = 900;
+        height = 1200;
+        onload: (() => void) | null = null;
+        set src(_v: string) {
+          setTimeout(() => this.onload?.(), 0);
+        }
+      }
+    );
+
+    const file = new File(['dummy content'], 'portrait.jpg', { type: 'image/jpeg' });
+    const result = await compressImage(file, 800, 0.75);
+
+    expect(result).toBe('data:image/jpeg;base64,mockCompressedData');
+    expect(mockFillRect).toHaveBeenCalledWith(0, 0, 600, 800);
+    expect(mockDrawImage).toHaveBeenCalledWith(expect.any(Object), 0, 0, 600, 800);
   });
 
   it('preserves dimensions when width <= maxWidth', async () => {
