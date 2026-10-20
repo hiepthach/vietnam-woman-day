@@ -40,13 +40,14 @@ export function AppContent() {
     };
   }, []);
 
-  // Mobile long-press trigger (3 seconds hold)
+  // Mobile / stealth long-press trigger (requires holding for 3 seconds)
   const handleStartPress = () => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
     }
     longPressTimerRef.current = setTimeout(() => {
       setIsAdminOpen(true);
+      longPressTimerRef.current = null;
     }, 3000);
   };
 
@@ -68,22 +69,22 @@ export function AppContent() {
       {/* Persistent Background Music Controller (top-right fixed) */}
       <MusicPlayer />
 
-      {/* Discreet Secret Admin Trigger (bottom-left fixed) */}
+      {/* Discreet Secret Admin Trigger (bottom-left fixed: stealthy, requires 3s hold to avoid spoiling surprise) */}
       <button
         type="button"
         data-testid="admin-trigger-button"
         aria-label="Cài đặt bí mật"
-        title="Cài đặt bí mật (Ctrl+Shift+E)"
-        onClick={() => setIsAdminOpen(true)}
+        title="Cài đặt bí mật (Giữ 3 giây hoặc Ctrl+Shift+E)"
+        onClick={(e) => e.preventDefault()}
         onTouchStart={handleStartPress}
         onTouchEnd={handleCancelPress}
         onTouchCancel={handleCancelPress}
         onMouseDown={handleStartPress}
         onMouseUp={handleCancelPress}
         onMouseLeave={handleCancelPress}
-        className="fixed bottom-3 left-3 z-40 opacity-40 hover:opacity-100 transition-opacity p-2.5 rounded-full bg-white/70 hover:bg-white/95 backdrop-blur-sm shadow-sm hover:shadow border border-rose-200/60 text-rose-400 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-300 cursor-pointer select-none"
+        className="fixed bottom-3 left-3 z-40 opacity-20 hover:opacity-70 transition-opacity p-2 rounded-full bg-white/40 hover:bg-white/80 backdrop-blur-xs border border-rose-200/40 text-rose-300 hover:text-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-300 cursor-pointer select-none"
       >
-        <Sparkles className="w-4 h-4" aria-hidden="true" />
+        <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
       </button>
 
       {/* Secret Admin Modal for Configuration Customization */}
@@ -92,20 +93,22 @@ export function AppContent() {
         onClose={() => setIsAdminOpen(false)}
       />
 
-      {/* Main Orchestration Stages */}
+      {/* Main Orchestration Stages with gentle fade-in transitions */}
       <main data-testid="stage-container" className="relative z-10 w-full min-h-screen">
-        {currentStage === 'welcome' && (
-          <WelcomeScreen onStart={() => setCurrentStage('quiz')} />
-        )}
-        {currentStage === 'quiz' && (
-          <QuizScreen onComplete={() => setCurrentStage('catch_flowers')} />
-        )}
-        {currentStage === 'catch_flowers' && (
-          <CatchFlowersScreen onComplete={() => setCurrentStage('gift_letter')} />
-        )}
-        {currentStage === 'gift_letter' && (
-          <GiftLetterScreen onRestart={() => setCurrentStage('welcome')} />
-        )}
+        <div key={currentStage} className="animate-fade-in w-full min-h-screen">
+          {currentStage === 'welcome' && (
+            <WelcomeScreen onStart={() => setCurrentStage('quiz')} />
+          )}
+          {currentStage === 'quiz' && (
+            <QuizScreen onComplete={() => setCurrentStage('catch_flowers')} />
+          )}
+          {currentStage === 'catch_flowers' && (
+            <CatchFlowersScreen onComplete={() => setCurrentStage('gift_letter')} />
+          )}
+          {currentStage === 'gift_letter' && (
+            <GiftLetterScreen onRestart={() => setCurrentStage('welcome')} />
+          )}
+        </div>
       </main>
     </div>
   );

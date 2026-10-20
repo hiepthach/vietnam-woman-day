@@ -187,7 +187,7 @@ describe('App End-to-End Orchestration', () => {
       expect(screen.getByTestId('admin-modal')).toBeInTheDocument();
     });
 
-    it('opens Admin Modal when clicking the discreet mobile button', () => {
+    it('does not open Admin Modal on short click or quick tap (must hold 3 seconds)', () => {
       render(<App />);
 
       expect(screen.queryByTestId('admin-modal')).not.toBeInTheDocument();
@@ -195,17 +195,18 @@ describe('App End-to-End Orchestration', () => {
       const adminBtn = screen.getByTestId('admin-trigger-button');
       fireEvent.click(adminBtn);
 
-      expect(screen.getByTestId('admin-modal')).toBeInTheDocument();
+      // Short click does not trigger admin modal
+      expect(screen.queryByTestId('admin-modal')).not.toBeInTheDocument();
     });
 
-    it('opens Admin Modal after holding mobile button for 3 seconds (long-press)', () => {
+    it('opens Admin Modal after holding button for 3 seconds via touch or mouse', () => {
       render(<App />);
 
       expect(screen.queryByTestId('admin-modal')).not.toBeInTheDocument();
 
       const adminBtn = screen.getByTestId('admin-trigger-button');
 
-      // Start touch
+      // Test touch hold
       fireEvent.touchStart(adminBtn);
 
       // Before 3000ms: still closed
@@ -220,11 +221,22 @@ describe('App End-to-End Orchestration', () => {
       });
       expect(screen.getByTestId('admin-modal')).toBeInTheDocument();
 
-      // End touch
+      // End touch and close modal
       fireEvent.touchEnd(adminBtn);
+      const closeBtn = screen.getByRole('button', { name: /Đóng/i });
+      fireEvent.click(closeBtn);
+      expect(screen.queryByTestId('admin-modal')).not.toBeInTheDocument();
+
+      // Test mouse hold
+      fireEvent.mouseDown(adminBtn);
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
+      expect(screen.getByTestId('admin-modal')).toBeInTheDocument();
+      fireEvent.mouseUp(adminBtn);
     });
 
-    it('cancels long-press trigger if user releases touch before 3 seconds', () => {
+    it('cancels long-press trigger if user releases touch or moves mouse away before 3 seconds', () => {
       render(<App />);
 
       expect(screen.queryByTestId('admin-modal')).not.toBeInTheDocument();
@@ -242,7 +254,18 @@ describe('App End-to-End Orchestration', () => {
       act(() => {
         vi.advanceTimersByTime(3000);
       });
+      expect(screen.queryByTestId('admin-modal')).not.toBeInTheDocument();
 
+      // Mouse down and mouse leave after 1 second
+      fireEvent.mouseDown(adminBtn);
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      fireEvent.mouseLeave(adminBtn);
+
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
       expect(screen.queryByTestId('admin-modal')).not.toBeInTheDocument();
     });
   });
